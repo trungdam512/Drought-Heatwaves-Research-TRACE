@@ -1,0 +1,531 @@
+---
+title: "Exploratory Analysis"
+author: "Trung Dam"
+date: "2023-07-06"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+# Loading libraries
+```{r}
+library(readr)
+library(dplyr)
+library(ggplot2)
+library(lubridate)
+library(tidyverse)
+library(cowplot)
+library(weathermetrics)
+library(zoo)
+library(SPEI)
+```
+
+# Reading in TRACE Weather 2019 data
+```{r}
+weather2019.1 <- read.csv("TRACE2019.1.csv")
+weather2019.2 <- read.csv("TRACE2019.2.csv")
+
+head(weather2019.1)
+head(weather2019.2)
+
+```
+```{r Cleaning the data}
+weather2019.1 <- weather2019.1[-(1:131),]
+colnames(weather2019.1)[3] <- "TOT_PREP(mm)"
+colnames(weather2019.1)[1] <- "Timestamp"
+colnames(weather2019.1)[4] <- "AirTC_Avg"
+colnames(weather2019.1)[5] <- "Relative Humidity"
+colnames(weather2019.1)[8] <- "AirTC_Max"
+
+weather2019.1$Timestamp <- mdy_hm(weather2019.1$Timestamp)
+weather2019.1$month <- month.name[month(weather2019.1$Timestamp)]
+weather2019.1$`TOT_PREP(mm)` <- as.numeric(weather2019.1$`TOT_PREP(mm)`)
+weather2019.1$`TOT_PREP(mm)` <- ifelse(is.na(weather2019.1$`TOT_PREP(mm)`), 0, weather2019.1$`TOT_PREP(mm)`)
+
+
+weather2019.1 <- weather2019.1 %>% group_by(month) %>% mutate(total_Prep = sum(`TOT_PREP(mm)`))
+
+```
+
+```{r Plotting fluctuation of precipitation in 2019 TRACE station}
+weather2019 <- weather2019.1 %>% select(Timestamp, AirTC_Avg, AirTC_Max, `TOT_PREP(mm)`, total_Prep, `Relative Humidity`, month)
+weather2019$`Relative Humidity` <- as.numeric(weather2019$`Relative Humidity`)
+weather2019$AirTC_Avg <- as.numeric(weather2019$AirTC_Avg)
+weather2019$year <- year(weather2019$Timestamp)
+weather2019$AirTC_Max <- as.numeric(weather2019$AirTC_Max)
+
+weather2019 <- weather2019 %>% filter(!is.na(AirTC_Avg) & `TOT_PREP(mm)` < 1000)
+
+weather2019 %>% ggplot(aes(x = Timestamp, y = `TOT_PREP(mm)`)) + 
+  geom_line()+
+  ggtitle("Fluctuation of precipitation in 2019 Sabana Research Station")+
+  ylab("Total Precipitation in mm")
+```
+
+```{r Plotting fluctuation of relative humdity during Jan-July 2019 TRACE Station}
+weather2019 %>% filter(month == "January") %>% ggplot(aes(x = factor(Timestamp), y = factor(`Relative Humidity`))) + 
+  geom_point()+
+  geom_smooth()+
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))+
+  ggtitle("Fluctuation of relative humidity in 2019 Sabana Research Station")+
+  xlab("Timestamp")+
+  ylab("Relative Humidity")
+```
+
+```{r Plotting the relationship between average air temperature and total precipitation daily in 2019 TRACE Station}
+weather2019 %>% filter(month == "January") %>% ggplot(aes(x = factor(AirTC_Avg), y = factor(`TOT_PREP(mm)`))) + 
+  geom_point()+
+  geom_smooth()+
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))+
+  ggtitle("Relationship between precipitation and temperature in January 2019 Sabana Research Station")+
+  xlab("Average Air Temp in C")+
+  ylab("Total Precipitation in mm")
+```
+
+### Reading in and Cleaning TRACE weather data from 2013 to 2018
+```{r}
+weather2018 <- read.csv("TRACE2018.csv")
+weather2017 <- read.csv("TRACE2017.csv")
+weather2016 <- read.csv("TRACE2016.csv")
+weather2015 <- read.csv("TRACE2015.csv")
+weather2014 <- read.csv("TRACE2014.csv")
+
+#Weather 2014
+weather2014 <- weather2014[-(1:3),]
+colnames(weather2014)[3] <- "TOT_PREP(mm)"
+colnames(weather2014)[1] <- "Timestamp"
+colnames(weather2014)[5] <- "AirTC_Avg"
+colnames(weather2014)[6] <- "Relative Humidity"
+colnames(weather2014)[9] <- "AirTC_Max"
+
+
+weather2014$Timestamp <- mdy_hm(weather2014$Timestamp)
+weather2014$month <- month.name[month(weather2014$Timestamp)]
+weather2014$year <- year(weather2014$Timestamp)
+weather2014$`TOT_PREP(mm)` <- as.numeric(weather2014$`TOT_PREP(mm)`)
+weather2014$`TOT_PREP(mm)` <- ifelse(is.na(weather2014$`TOT_PREP(mm)`), 0, weather2014$`TOT_PREP(mm)`)
+weather2014$`Relative Humidity` <- as.numeric(weather2014$`Relative Humidity`)
+weather2014$AirTC_Avg <- as.numeric(weather2014$AirTC_Avg)
+weather2014$AirTC_Max <- as.numeric(weather2014$AirTC_Max)
+
+weather2014 <- weather2014 %>% group_by(month) %>% mutate(total_Prep = sum(`TOT_PREP(mm)`)) %>%
+  select(Timestamp, AirTC_Avg, AirTC_Max, `TOT_PREP(mm)`, total_Prep, `Relative Humidity`, month, year) %>% 
+  filter(year == 2014)
+
+#Weather 2015
+weather2015 <- weather2015[-(1:3),]
+colnames(weather2015)[3] <- "TOT_PREP(mm)"
+colnames(weather2015)[1] <- "Timestamp"
+colnames(weather2015)[5] <- "AirTC_Avg"
+colnames(weather2015)[6] <- "Relative Humidity"
+colnames(weather2015)[9] <- "AirTC_Max"
+
+
+weather2015$Timestamp <- mdy_hm(weather2015$Timestamp)
+weather2015$month <- month.name[month(weather2015$Timestamp)]
+weather2015$year <- year(weather2015$Timestamp)
+weather2015$`TOT_PREP(mm)` <- as.numeric(weather2015$`TOT_PREP(mm)`)
+weather2015$`TOT_PREP(mm)` <- ifelse(is.na(weather2015$`TOT_PREP(mm)`), 0, weather2015$`TOT_PREP(mm)`)
+weather2015$`Relative Humidity` <- as.numeric(weather2015$`Relative Humidity`)
+weather2015$AirTC_Avg <- as.numeric(weather2015$AirTC_Avg)
+weather2015$AirTC_Max <- as.numeric(weather2015$AirTC_Max)
+
+weather2015 <- weather2015 %>% group_by(month) %>% mutate(total_Prep = sum(`TOT_PREP(mm)`)) %>%
+  select(Timestamp, AirTC_Avg, AirTC_Max, `TOT_PREP(mm)`, total_Prep, `Relative Humidity`, month, year) %>% 
+  filter(year == 2015)
+
+#Weather 2016
+weather2016 <- weather2016[-(1:3),]
+colnames(weather2016)[3] <- "TOT_PREP(mm)"
+colnames(weather2016)[1] <- "Timestamp"
+colnames(weather2016)[5] <- "AirTC_Avg"
+colnames(weather2016)[6] <- "Relative Humidity"
+colnames(weather2016)[9] <- "AirTC_Max"
+
+
+weather2016$Timestamp <- mdy_hm(weather2016$Timestamp)
+weather2016$month <- month.name[month(weather2016$Timestamp)]
+weather2016$year <- year(weather2016$Timestamp)
+weather2016$`TOT_PREP(mm)` <- as.numeric(weather2016$`TOT_PREP(mm)`)
+weather2016$`TOT_PREP(mm)` <- ifelse(is.na(weather2016$`TOT_PREP(mm)`), 0, weather2016$`TOT_PREP(mm)`)
+weather2016$`Relative Humidity` <- as.numeric(weather2016$`Relative Humidity`)
+weather2016$AirTC_Avg <- as.numeric(weather2016$AirTC_Avg)
+weather2016$AirTC_Max <- as.numeric(weather2016$AirTC_Max)
+
+weather2016 <- weather2016 %>% filter(!is.na(AirTC_Avg)) %>% group_by(month) %>% mutate(total_Prep = sum(`TOT_PREP(mm)`)) %>%
+  select(Timestamp, AirTC_Avg, AirTC_Max, `TOT_PREP(mm)`, total_Prep, `Relative Humidity`, month, year)
+  
+
+#Weather 2017
+weather2017 <- weather2017[-(1:3),]
+colnames(weather2017)[3] <- "TOT_PREP(mm)"
+colnames(weather2017)[1] <- "Timestamp"
+colnames(weather2017)[5] <- "AirTC_Avg"
+colnames(weather2017)[6] <- "Relative Humidity"
+colnames(weather2017)[9] <- "AirTC_Max"
+
+
+weather2017$Timestamp <- mdy_hm(weather2017$Timestamp)
+weather2017$month <- month.name[month(weather2017$Timestamp)]
+weather2017$year <- year(weather2017$Timestamp)
+weather2017$`TOT_PREP(mm)` <- as.numeric(weather2017$`TOT_PREP(mm)`)
+weather2017$`TOT_PREP(mm)` <- ifelse(is.na(weather2017$`TOT_PREP(mm)`), 0, weather2017$`TOT_PREP(mm)`)
+weather2017$`Relative Humidity` <- as.numeric(weather2017$`Relative Humidity`)
+weather2017$AirTC_Avg <- as.numeric(weather2017$AirTC_Avg)
+weather2017$AirTC_Max <- as.numeric(weather2017$AirTC_Max)
+
+weather2017 <- weather2017 %>% filter(!is.na(AirTC_Avg) & AirTC_Avg > 0  ) %>%  group_by(month) %>% mutate(total_Prep = sum(`TOT_PREP(mm)`)) %>%
+  select(Timestamp, AirTC_Avg, AirTC_Max, `TOT_PREP(mm)`, total_Prep, `Relative Humidity`, month, year)
+
+#Weather 2018 (need to ask more before using this)
+# weather2018 <- weather2018[-(1:3),]
+# colnames(weather2018)[3] <- "TOT_PREP(mm)"
+# colnames(weather2018)[1] <- "Timestamp"
+# colnames(weather2018)[5] <- "AirTC_Avg"
+# colnames(weather2018)[6] <- "Relative Humidity"
+# 
+# 
+# weather2018$Timestamp <- mdy_hm(weather2018$Timestamp)
+# weather2018$month <- month.name[month(weather2018$Timestamp)]
+# weather2018$year <- year(weather2018$Timestamp)
+# weather2018$`TOT_PREP(mm)` <- as.numeric(weather2018$`TOT_PREP(mm)`)
+# weather2018$`TOT_PREP(mm)` <- ifelse(is.na(weather2018$`TOT_PREP(mm)`), 0, weather2018$`TOT_PREP(mm)`)
+# weather2018$`Relative Humidity` <- as.numeric(weather2018$`Relative Humidity`)
+# weather2018$AirTC_Avg <- as.numeric(weather2018$AirTC_Avg)
+# 
+# weather2018 <- weather2018 %>% group_by(month) %>% mutate(total_Prep = sum(`TOT_PREP(mm)`)) %>%
+#   select(Timestamp, AirTC_Avg, `TOT_PREP(mm)`, total_Prep, `Relative Humidity`, month, year)
+```
+
+```{r Merging data from each year from 2013 to 2019 at TRACE & Cleaning new data}
+weatherTRACE <- bind_rows(weather2014, weather2015, weather2016, weather2017, weather2019)
+
+weatherTRACE$AirTC_Avg <- ifelse(is.na(weatherTRACE$AirTC_Avg) |weatherTRACE$AirTC_Avg < 0 , 0, weatherTRACE$AirTC_Avg)
+weatherTRACE$`Relative Humidity` <- ifelse(is.na(weatherTRACE$`Relative Humidity`) | weatherTRACE$`Relative Humidity` < 0, 0, weatherTRACE$`Relative Humidity`)
+
+colnames(weatherTRACE)[5] = "total_Precip_month"
+weatherTRACE <- weatherTRACE %>% group_by(year) %>% mutate(total_Precip_year = sum(`TOT_PREP(mm)`))
+```
+
+```{r Plotting total precipitation yearly from 2013 to 2019 at TRACE}
+totPrecipYearly <- unique(weatherTRACE %>% select(year, total_Precip_year)) %>% filter(year != "NA" & year != 2013)
+totPrecipYearly$year <- as.factor(totPrecipYearly$year)
+  ggplot(totPrecipYearly, aes(x = factor(year), y = total_Precip_year, fill = year)) + 
+  geom_bar(stat = "identity", show.legend = FALSE) + 
+  scale_fill_manual(values = c("2014" = "black", "2015" =  "red", "2016" = "black", "2017" = "black", "2018" = "black", "2019" = "black"))+
+  ggtitle("Total Precipitation Yearly from 2014 to 2019 at Sabana")+
+  ylab("Total Precipitation in mm")+
+  xlab("Year")+
+  theme_cowplot()
+ 
+# weatherTRACE %>% filter(year != 2013) %>%  ggplot(aes(x = factor(year), y = total_Precip_year)) + 
+#   geom_bar(stat = "identity") + 
+#   ggtitle("Total Precipitation Yearly from 2014 to 2019 at Sabana")+
+#   ylab("Total Precipitation in mm")+
+#   xlab("Year")
+```
+
+```{r Time series point graph about temperature change through out the year}
+weatherTRACE %>% filter(year == 2015) %>% ggplot(aes(x = Timestamp, y = AirTC_Avg)) + geom_point()
+
+weatherTRACE %>% filter(year == 2015) %>% ggplot(aes(x = `Relative Humidity`, y = AirTC_Avg)) + geom_point()
+
+weatherTRACE %>% filter(AirTC_Avg != 0) %>% ggplot(aes(x = Timestamp, y = AirTC_Avg)) +geom_point()
+```
+
+```{r Plotting temperature, relative humidity, and time}
+tempHumidDaily <- weatherTRACE %>%  select(Timestamp, AirTC_Avg, `Relative Humidity`) %>% filter(year!= 2013 & AirTC_Avg != 0)
+
+max_first  <- max(tempHumidDaily$AirTC_Avg)   # Specify max of first y axis
+max_second <- max(tempHumidDaily$`Relative Humidity`) # Specify max of second y axis
+min_first  <- min(tempHumidDaily$AirTC_Avg)   # Specify min of first y axis
+min_second <- min(tempHumidDaily$`Relative Humidity`) # Specify min of second y axis
+
+# scale and shift variables calculated based on desired mins and maxes
+scale = (max_second - min_second)/(max_first - min_first)
+shift = min_first - min_second
+
+# Function to scale secondary axis
+scale_function <- function(x, scale, shift){
+  return ((x)*scale - shift)
+}
+
+# Function to scale secondary variable values
+inv_scale_function <- function(x, scale, shift){
+  return ((x + shift)/scale)
+}
+
+ggplot(tempHumidDaily, aes(x = Timestamp, y = AirTC_Avg)) +
+  geom_line(aes(color = "Daily Air Temperature in C")) +
+  geom_line(aes(y = inv_scale_function(tempHumidDaily$`Relative Humidity`, scale, shift), color = "Relative Humidity in %")) +
+  # scale_x_continuous(breaks = seq(2014, 2019, 1)) +
+  scale_y_continuous(limits = c(min_first, max_first), sec.axis = sec_axis(~scale_function(., scale, shift), name="Relative Humidity in %")) +
+  labs(x = "Year", y = "Temperature (Celsius)", color = "") +
+  scale_color_manual(values = c("orange2", "gray30"))+
+  theme(
+    axis.title.y = element_text(color = "gray30"),
+    axis.title.y.right = element_text(color = "orange3")
+  ) + 
+  theme_cowplot()
+
+```
+
+```{r Plotting temperature, total precipitation, and time - Version 1}
+
+tempPrecipDaily <- weatherTRACE %>%  select(Timestamp, AirTC_Avg, `TOT_PREP(mm)`) %>% filter(year!= 2013 & AirTC_Avg != 0 & `TOT_PREP(mm)` > 0 & `TOT_PREP(mm)` < 1000)
+
+max_first  <- max(tempPrecipDaily$AirTC_Avg)   # Specify max of first y axis
+max_second <- max(tempPrecipDaily$`TOT_PREP(mm)`) # Specify max of second y axis
+min_first  <- min(tempPrecipDaily$AirTC_Avg)   # Specify min of first y axis
+min_second <- min(tempPrecipDaily$`TOT_PREP(mm)`) # Specify min of second y axis
+
+# scale and shift variables calculated based on desired mins and maxes
+scale = (max_second - min_second)/(max_first - min_first)
+shift = min_first - min_second
+
+# Function to scale secondary axis
+scale_function <- function(x, scale, shift){
+  return ((x)*scale - shift)
+}
+
+# Function to scale secondary variable values
+inv_scale_function <- function(x, scale, shift){
+  return ((x + shift)/scale)
+}
+
+ggplot(tempPrecipDaily, aes(x = Timestamp, y = AirTC_Avg)) +
+  geom_line(aes(color = "Daily Air Temperature in C")) +
+  geom_line(aes(y = inv_scale_function(tempPrecipDaily$`TOT_PREP(mm)`, scale, shift), color = "Total Precipitation in mm")) +
+  scale_y_continuous(limits = c(min_first, max_first), sec.axis = sec_axis(~scale_function(., scale, shift), name="Total Precipitation in mm")) +
+  labs(x = "Year", y = "Temperature (Celsius)", color = "") +
+  scale_color_manual(values = c("orange2", "gray30"))+
+  theme(
+    axis.title.y = element_text(color = "gray30"),
+    axis.title.y.right = element_text(color = "orange3")
+  ) + 
+  theme_cowplot()
+
+
+```
+```{r Plotting temperature, total precipitation, and time - Version 2}
+summary(tempPrecipDaily)
+
+tempPrecipDaily %>% ggplot() + 
+  geom_bar(mapping = aes(x = Timestamp, y = `TOT_PREP(mm)` * 100 / 900), stat = "identity", colour = gray(0.5), fill = gray(0.5)) + 
+  geom_line(mapping = aes(x = Timestamp, y = AirTC_Avg)) + 
+  geom_point(mapping = aes(x = Timestamp, y = AirTC_Avg)) + 
+  # scale_x_continuous("Year", breaks = 1:6)+
+  # scale_x_date(name = "Year", breaks = seq.Date(as_date(tempPrecipDaily$Timestamp[1]), as_date(tempPrecipDaily$Timestamp[994]), by = "1 year"), labels = function(date){return(year(date, label = TRUE))})+
+  scale_y_continuous(
+    name = expression("Temperature ("~degree~"C)"), 
+    sec.axis = sec_axis(~ . * 900 / 100 , name = "Precipitation (mm)"))
+    # , 
+    # limits = c(0, 30)) + 
+  theme_cowplot() + 
+  theme(
+    panel.grid.major = element_blank(), 
+    panel.grid.minor = element_blank()
+  )
+```
+```{r}
+summary(weatherTRACE)
+```
+```{r Calculating heat index & categorizing hot temp}
+weatherTRACE <- weatherTRACE %>% 
+  mutate(heatIndex = heat.index(t= AirTC_Max, rh = `Relative Humidity`, temperature.metric = "celsius", output.metric = "fahrenheit", round = 0)) %>% 
+  mutate(heatStatus = case_when(heatIndex <= 90 ~ "Hot",
+                          heatIndex > 90 & heatIndex < 103 ~ "Extreme Hot",
+                          heatIndex >= 103 & heatIndex < 124 ~ "Danger Hot",
+                          heatIndex >= 124 ~ "Extreme Danger Hot"))
+
+# Add rainfall status 
+rainfallThreshold = 0.1
+weatherTRACE <- weatherTRACE %>% mutate(rainfallStatus = case_when(`TOT_PREP(mm)` <= rainfallThreshold ~ "Low rainfall",
+                                        `TOT_PREP(mm)` > rainfallThreshold ~ "High rainfall")) 
+
+# summary(rainfallRollingData$rolling_avg) # finding the low rainfall threshold for 7-day average
+rainfallThreshold7Days = 2.446
+rainfallRollingData <- weatherTRACE %>% mutate(rolling_avg = rollmean(`TOT_PREP(mm)`, k = 7, fill = NA, align = "left")) %>% 
+  mutate(rainfallStatus = case_when(rolling_avg <= rainfallThreshold7Days ~ "Low rainfall",
+                                    rolling_avg > rainfallThreshold7Days ~ "High rainfall")) 
+
+```
+
+```{r Plotting the running average graph for rainfall}
+ggplot(rainfallRollingData, aes(x = Timestamp, y = rolling_avg)) + geom_line() +
+  geom_smooth() 
+  # geom_line(aes(x=Timestamp,y = rainfallRollingData$`TOT_PREP(mm)`),color="red")
+```
+```{r Plotting the temperature and rainfall}
+weatherTRACE %>%  filter(`TOT_PREP(mm)` < 150) %>% ggplot(aes(y= AirTC_Avg, x = `TOT_PREP(mm)`, color = heatStatus ))+
+  geom_point()+
+  geom_smooth()
+
+#Playing around version (Not a great one!)
+weatherTRACE %>%  filter(`TOT_PREP(mm)` < 150) %>% ggplot(aes(y= AirTC_Avg, x = `TOT_PREP(mm)`, color = rainfallStatus ))+
+  geom_point()+
+  geom_smooth()+
+  facet_wrap(~ heatStatus)
+
+# Version 2
+weatherTRACE %>% mutate(comboStressors = ifelse(heatStatus == "Extreme Danger" | heatStatus == "Danger Hot" & rainfallStatus == "Low rainfall", "YES", "NO")) %>% 
+  ggplot(aes(y= AirTC_Avg, x = `TOT_PREP(mm)`, color = comboStressors ))+
+  geom_point()+
+  geom_smooth()+
+  facet_wrap(~ heatStatus)
+```
+```{r Plotting temperature overtime}
+weatherTRACE %>% ggplot(aes(x = Timestamp, y = AirTC_Avg, color = heatStatus)) +
+  geom_point()
+
+```
+
+```{r New data frame with drought index}
+droughtIndex <- unique(weatherTRACE %>% mutate(monthNum = match(month, month.name)) %>% select(year, monthNum,total_Precip_month)) 
+# droughtIndex %>% mutate(index = spi(weatherTRACE$total_Precip_month,3))
+spi3 <- spi(droughtIndex$total_Precip_month,3)
+
+plot(spi3)
+
+```
+### Examine the difference of low rainfall and high heat shock across topography
+```{r Load Bisley data in}
+Bisley2015 <- read.csv("Bisley2015.csv")
+Bisley2016 <- read.csv("Bisley2016.csv")
+Bisley2017 <- read.csv("Bisley2017.csv")
+Bisley2018 <- read.csv("Bisley2018.csv")
+
+#Bisley 2015 cleaning
+colnames(Bisley2015)[3] <- "TOT_PREP(mm)"
+Bisley2015$Timestamp <- dmy(Bisley2015$Timestamp)
+Bisley2015$month <- month.name[month(Bisley2015$Timestamp)]
+
+Bisley2015 <- Bisley2015 %>% select(Timestamp, AirTC_Max, AirTC_Min, `TOT_PREP(mm)`, RH_Max, RH_Min, month, year) %>% filter(!is.na(Timestamp))
+
+#Bisley 2016 cleaning
+colnames(Bisley2016)[3] <- "TOT_PREP(mm)"
+Bisley2016$Timestamp <- mdy(Bisley2016$Timestamp)
+Bisley2016$month <- month.name[month(Bisley2016$Timestamp)]
+
+Bisley2016 <- Bisley2016 %>% select(Timestamp, AirTC_Max, AirTC_Min, `TOT_PREP(mm)`, RH_Max, RH_Min, month, year) %>% filter(!is.na(Timestamp))
+
+#Bisley 2017 cleaning
+colnames(Bisley2017)[3] <- "TOT_PREP(mm)"
+Bisley2017$Timestamp <- mdy(Bisley2017$Timestamp)
+Bisley2017$month <- month.name[month(Bisley2017$Timestamp)]
+
+Bisley2017 <- Bisley2017 %>% select(Timestamp, AirTC_Max, AirTC_Min, `TOT_PREP(mm)`, RH_Max, RH_Min, month, year) %>% filter(!is.na(Timestamp))
+
+#Bisley 2018 cleaning (supper ugly since low battery)
+# colnames(Bisley2018)[3] <- "TOT_PREP(mm)"
+# Bisley2018$Timestamp <- mdy(Bisley2018$Timestamp)
+# Bisley2018$month <- month.name[month(Bisley2018$Timestamp)]
+# 
+# Bisley2018 <- Bisley2018 %>% select(Timestamp, AirTC_Max, AirTC_Min, `TOT_PREP(mm)`, RH_Max, RH_Min, month, year) %>% filter(!is.na(Timestamp) & RH_Max > 10)
+
+weatherBisley <- bind_rows(Bisley2015, Bisley2016, Bisley2017) 
+weatherBisley <- weatherBisley %>% filter(AirTC_Max > 0 & AirTC_Min > 0 )
+```
+
+### Exploratory Analysis for Bisley Research Site
+```{r}
+# weatherBisley %>% ggplot(aes(x = month, y = `TOT_PREP(mm)`, color = year))+
+#   geom_line()
+
+weatherBisley %>% ggplot(aes(x = Timestamp, y = AirTC_Max)) + geom_line() +
+  geom_line(aes(x = Timestamp, y = weatherBisley$AirTC_Min), color = "blue") +
+  labs(title = "Temperature in Bisley Research Station from 2015 to 2017", x = "Year", y = "Temperature in ("~degree~"C)") +
+  scale_color_manual(name = "Temperature",
+values = c( "Max Air Temperature" = "red", "Min Air Temperature" = "blue"))
+
+weatherBisley %>% ggplot(aes(x = Timestamp, y = `TOT_PREP(mm)`)) + geom_line() +
+  labs(title = "Rainfall in Bisley Research Station from 2015 to 2017", x = "Year", y = "Rainfall in mm")
+
+unique(weatherBisley %>% group_by(year) %>% mutate(total_precip_year = sum(`TOT_PREP(mm)`)) %>% select(year, total_precip_year)) %>% 
+  ggplot(aes(x=year, y = total_precip_year)) +
+  geom_bar(stat = "identity")
+```
+## Integrating heat index and rainfall classification into Bisley
+```{r}
+weatherBisley <- weatherBisley %>% 
+  mutate(heatIndex = heat.index(t= AirTC_Max, rh = RH_Max, temperature.metric = "celsius", output.metric = "fahrenheit", round = 0)) %>% 
+  mutate(heatStatus = case_when(heatIndex < 80 ~ "Normal",
+                          heatIndex <= 90 & heatIndex >= 80 ~ "Hot",
+                          heatIndex > 90 & heatIndex < 103 ~ "Extreme Hot",
+                          heatIndex >= 103 & heatIndex < 124 ~ "Danger Hot",
+                          heatIndex >= 124 ~ "Extreme Danger Hot")) 
+
+summary(weatherBisley$`TOT_PREP(mm)`) # choose the rainfall threshold
+
+# Add rainfall status 
+weatherBisley <- weatherBisley %>% mutate(rainfallStatus = case_when(`TOT_PREP(mm)` <= rainfallThreshold ~ "Low rainfall",
+                                        `TOT_PREP(mm)` > rainfallThreshold ~ "High rainfall")) 
+
+# Relationship between temp and precip 
+weatherBisley %>% ggplot(aes(y = AirTC_Max, x = `TOT_PREP(mm)`, color = heatStatus))+
+  geom_point()+
+  geom_smooth()
+
+weatherBisley %>% mutate(comboStressors = ifelse(heatStatus == "Extreme Danger Hot" | heatStatus == "Danger Hot" & rainfallStatus == "Low rainfall", "YES", "NO")) %>% 
+  ggplot(aes(y= AirTC_Max, x = `TOT_PREP(mm)`, color = comboStressors ))+
+  geom_point()+
+  geom_smooth()+
+  facet_wrap(~ heatStatus)
+```
+
+```{r Comparison between TRACE and Bisley}
+# weatherTRACE %>% filter(year == c(2015,2016,2017)) %>% 
+#   ggplot(aes(x = Timestamp, y = AirTC_Max))+ geom_line()+
+#   geom_line(weatherBisley, aes(x=Timestamp, y = weatherBisley$AirTC_Max))
+
+# Compare rainfall from two sites
+rainfall2sites <- read.csv("rainfall2sites.csv")
+rainfall2sites %>% ggplot(aes(x=Year, y = Tot_Prep, fill = Station))+
+  geom_bar(stat = "identity", position = "dodge")+
+  geom_text(aes(label = round(Tot_Prep, 1)), 
+            position = position_dodge(0.9),
+            color="white",vjust = 1,hjust = 0.5)+
+  labs(title = "Precipitation in mm in Bisley and TRACE from 2014 to 2017",
+      y = "Precipitation (mm)")
+```
+# Graph interpretation
+From 2014 to 2017, there is a decrease in total precipitation yearly in both Bisley and TRACE Research Stations. In these four years, Bisley had more rainfall amount compared to TRACE, suggesting a difference stem from their ecological attributes.
+
+```{r Compare two sites temperature}
+hist(weatherTRACE$AirTC_Max)
+hist(weatherBisley$AirTC_Max) 
+
+inner_join(weatherTRACE %>% select(Timestamp, AirTC_Max), weatherBisley %>% select(Timestamp, AirTC_Max), by = "Timestamp") %>% 
+  ggplot(aes(x=Timestamp))+
+  geom_line(aes(y = AirTC_Max.x, color = "TRACE")) +
+  geom_line(aes(y = AirTC_Max.y, color = "Bisley")) +
+  labs(title = "Maximum temperature in \u00B0C in Bisley and TRACE from 2015 to 2017",
+       y = "Temperature in \u00B0C",
+       x = "Year")
+```
+# Graph intepretation
+Through out 2015 to 2017, Bisley and TRACE had the similar pattern of changes in maximum temperature. However, TRACE had a higher temperature range through out these 3 years, ranging from 22.41 to 34.56 \u00B0C compared to Bisley's temperature, which ranges from 20 to 32.28 \u00B0C. Again, this suggest the difference in topography contributes to different climatic attributes.
+
+```{r Linear regression model for temperature and rainfall in two sites}
+model <- lm(weatherTRACE$`TOT_PREP(mm)`~ AirTC_Max, data = weatherTRACE)
+summary(model)
+
+model1 <- lm(weatherBisley$`TOT_PREP(mm)`~ AirTC_Max , data = weatherBisley)
+summary(model1)
+
+```
+# Models Intepretation
+These two are two simple linear regression models between the daily precipitation and daily maximum temperature in two study sites, Bisley and TRACE. For the model in TRACE, with an increase in one Celsius degree, there would be a decrease of 2.3mm in precipitation that day. Similarly for Bisley, with an increase in temperature, there would be a decrease of 0.8mm in precipitation that day. Statistically, two models have low p-values (respectively < 2.2e-16 and 6.059e-12) though insignificant R-squared. 
+
+```{r Gibberish}
+unique( weatherBisley %>% group_by(year) %>% summarize(x = sum(`TOT_PREP(mm)`)))
+sum(Bisley2017$`TOT_PREP(mm)`)
+unique(weatherTRACE %>% select(year, total_Precip_year))
+```
+
+```{r Export data for Nibia}
+save(weatherTRACE, file = "weatherTRACE.RData")
+# load("NY_all.RData")
+```
+
