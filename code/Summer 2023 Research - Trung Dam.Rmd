@@ -286,21 +286,6 @@ weatherBisley <- bind_rows(Bisley2015, Bisley2016, Bisley2017)
 weatherBisley <- weatherBisley %>% filter(AirTC_Max > 0 & AirTC_Min > 0 )
 ```
 
-```{r,  echo=FALSE, message=FALSE, warning=FALSE}
-# weatherBisley %>% ggplot(aes(x = Timestamp, y = AirTC_Max)) + geom_line() +
-#   geom_line(aes(x = Timestamp, y = weatherBisley$AirTC_Min), color = "blue") +
-#   labs(title = "Temperature in Bisley Research Station from 2015 to 2017", x = "Year", y = "Temperature in ("~degree~"C)") +
-#   scale_color_manual(name = "Temperature",
-# values = c( "Max Air Temperature" = "red", "Min Air Temperature" = "blue"))
-# 
-# weatherBisley %>% ggplot(aes(x = Timestamp, y = `TOT_PREP(mm)`)) + geom_line() +
-#   labs(title = "Rainfall in Bisley Research Station from 2015 to 2017", x = "Year", y = "Rainfall in mm")
-# 
-# unique(weatherBisley %>% group_by(year) %>% mutate(total_precip_year = sum(`TOT_PREP(mm)`)) %>% select(year, total_precip_year)) %>% 
-#   ggplot(aes(x=year, y = total_precip_year)) +
-#   geom_bar(stat = "identity")
-```
-
 ```{r Integrating heat index and rainfall classification into Bisley,  echo=FALSE, message=FALSE, warning=FALSE, results='hide'}
 weatherBisley <- weatherBisley %>% 
   mutate(heatIndex = heat.index(t= AirTC_Max, rh = RH_Max, temperature.metric = "celsius", output.metric = "fahrenheit", round = 0)) %>% 
@@ -566,9 +551,3 @@ unique( weatherBisley %>% group_by(year) %>% summarize(x = sum(`TOT_PREP(mm)`)))
 sum(Bisley2017$`TOT_PREP(mm)`)
 unique(weatherTRACE %>% select(year, total_Precip_year))
 ```
-
-```{r Export data for Nibia, , echo=FALSE, message=FALSE, warning=FALSE}
-save(weatherTRACE, file = "weatherTRACE.RData")
-# load("NY_all.RData")
-```
-
