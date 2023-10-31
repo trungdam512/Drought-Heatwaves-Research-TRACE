@@ -1,9 +1,8 @@
 ---
-title: <font size="10"> Investigating Drought Climatic Aspects In Puerto Rican Tropical Rainforests </font>
+title: "Investigating Drought Climatic Aspects In Puerto Rican Tropical Rainforest"
 author: "Trung Dam"
 date: "2023-08-17"
-output: html_document:
-  number_sections: true
+output: html_document
 ---
 
 # Introduction
@@ -37,7 +36,7 @@ The data got loaded and processed in R. We calculated Shannon D’s biodiversity
 The meterological data are fit in a linear model to explore the relationship between rainfall and temperature change in two study sites: Sabana Field Research Station and Bisley Experimental Watersheds. The data sets further got fitted in a logistic model to investigate the probability of having a "climatic stressors" day (a day with low rainfall and extreme heat) in regard to daily temperature, daily precipitation, and different topography.
 
 
-```{r, echo=FALSE, message=FALSE, warning=FALSE}
+```{r Loading libraries, echo=FALSE, message=FALSE, warning=FALSE}
 library(readr)
 library(dplyr)
 library(ggplot2)
@@ -50,71 +49,7 @@ library(SPEI)
 library(vegan)
 ```
 
-# Reading in TRACE Weather 2019 data
-```{r}
-weather2019.1 <- read.csv("TRACE2019.1.csv")
-weather2019.2 <- read.csv("TRACE2019.2.csv")
-
-head(weather2019.1)
-head(weather2019.2)
-
-```
-```{r Cleaning the data}
-weather2019.1 <- weather2019.1[-(1:131),]
-colnames(weather2019.1)[3] <- "TOT_PREP(mm)"
-colnames(weather2019.1)[1] <- "Timestamp"
-colnames(weather2019.1)[4] <- "AirTC_Avg"
-colnames(weather2019.1)[5] <- "Relative Humidity"
-colnames(weather2019.1)[8] <- "AirTC_Max"
-
-weather2019.1$Timestamp <- mdy_hm(weather2019.1$Timestamp)
-weather2019.1$month <- month.name[month(weather2019.1$Timestamp)]
-weather2019.1$`TOT_PREP(mm)` <- as.numeric(weather2019.1$`TOT_PREP(mm)`)
-weather2019.1$`TOT_PREP(mm)` <- ifelse(is.na(weather2019.1$`TOT_PREP(mm)`), 0, weather2019.1$`TOT_PREP(mm)`)
-
-
-weather2019.1 <- weather2019.1 %>% group_by(month) %>% mutate(total_Prep = sum(`TOT_PREP(mm)`))
-
-```
-
-```{r Plotting fluctuation of precipitation in 2019 TRACE station}
-weather2019 <- weather2019.1 %>% select(Timestamp, AirTC_Avg, AirTC_Max, `TOT_PREP(mm)`, total_Prep, `Relative Humidity`, month)
-weather2019$`Relative Humidity` <- as.numeric(weather2019$`Relative Humidity`)
-weather2019$AirTC_Avg <- as.numeric(weather2019$AirTC_Avg)
-weather2019$year <- year(weather2019$Timestamp)
-weather2019$AirTC_Max <- as.numeric(weather2019$AirTC_Max)
-
-weather2019 <- weather2019 %>% filter(!is.na(AirTC_Avg) & `TOT_PREP(mm)` < 1000)
-
-weather2019 %>% ggplot(aes(x = Timestamp, y = `TOT_PREP(mm)`)) + 
-  geom_line()+
-  ggtitle("Fluctuation of precipitation in 2019 Sabana Research Station")+
-  ylab("Total Precipitation in mm")
-```
-
-```{r Plotting fluctuation of relative humdity during Jan-July 2019 TRACE Station}
-weather2019 %>% filter(month == "January") %>% ggplot(aes(x = factor(Timestamp), y = factor(`Relative Humidity`))) + 
-  geom_point()+
-  geom_smooth()+
-  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))+
-  ggtitle("Fluctuation of relative humidity in 2019 Sabana Research Station")+
-  xlab("Timestamp")+
-  ylab("Relative Humidity")
-```
-
-```{r Plotting the relationship between average air temperature and total precipitation daily in 2019 TRACE Station}
-weather2019 %>% filter(month == "January") %>% ggplot(aes(x = factor(AirTC_Avg), y = factor(`TOT_PREP(mm)`))) + 
-  geom_point()+
-  geom_smooth()+
-  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))+
-  ggtitle("Relationship between precipitation and temperature in January 2019 Sabana Research Station")+
-  xlab("Average Air Temp in C")+
-  ylab("Total Precipitation in mm")
-```
-
-### Reading in and Cleaning TRACE weather data from 2013 to 2018
-```{r}
-weather2018 <- read.csv("TRACE2018.csv")
+```{r Reading in and Cleaning TRACE weather data from 2014 to 2017, echo=FALSE, message=FALSE, warning=FALSE}
 weather2017 <- read.csv("TRACE2017.csv")
 weather2016 <- read.csv("TRACE2016.csv")
 weather2015 <- read.csv("TRACE2015.csv")
@@ -206,10 +141,9 @@ weather2017$AirTC_Max <- as.numeric(weather2017$AirTC_Max)
 
 weather2017 <- weather2017 %>% filter(!is.na(AirTC_Avg) & AirTC_Avg > 0  ) %>%  group_by(month) %>% mutate(total_Prep = sum(`TOT_PREP(mm)`)) %>%
   select(Timestamp, AirTC_Avg, AirTC_Max, `TOT_PREP(mm)`, total_Prep, `Relative Humidity`, month, year)
-```
 
-```{r Merging data from each year from 2013 to 2019 at TRACE & Cleaning new data}
-weatherTRACE <- bind_rows(weather2014, weather2015, weather2016, weather2017, weather2019)
+# Merging data from each year from 2014 to 2017 at TRACE & Cleaning new data
+weatherTRACE <- bind_rows(weather2014, weather2015, weather2016, weather2017)
 
 weatherTRACE$AirTC_Avg <- ifelse(is.na(weatherTRACE$AirTC_Avg) |weatherTRACE$AirTC_Avg < 0 , 0, weatherTRACE$AirTC_Avg)
 weatherTRACE$`Relative Humidity` <- ifelse(is.na(weatherTRACE$`Relative Humidity`) | weatherTRACE$`Relative Humidity` < 0, 0, weatherTRACE$`Relative Humidity`)
@@ -218,110 +152,37 @@ colnames(weatherTRACE)[5] = "total_Precip_month"
 weatherTRACE <- weatherTRACE %>% group_by(year) %>% mutate(total_Precip_year = sum(`TOT_PREP(mm)`))
 ```
 
-```{r Plotting total precipitation yearly from 2013 to 2019 at TRACE}
+## Data exploratory analyses
+### Sabana Field Research Station
+```{r Plotting total precipitation yearly from 2014 to 2017 at TRACE, echo=FALSE, message=FALSE, warning=FALSE }
 totPrecipYearly <- unique(weatherTRACE %>% group_by(year) %>% mutate(numDays = n()) %>% select(year, numDays, total_Precip_year)) %>% filter(year != "NA" & year != 2013) %>% mutate(rainfallDaily = total_Precip_year/numDays)
 totPrecipYearly$year <- as.factor(totPrecipYearly$year)
-  ggplot(totPrecipYearly, aes(x = factor(year), y = rainfallDaily, fill = year)) + 
+  
+ggplot(totPrecipYearly, aes(x = factor(year), y = rainfallDaily, fill = year)) + 
   geom_bar(stat = "identity", show.legend = FALSE) + 
   scale_fill_manual(values = c("2014" = "black", "2015" =  "red", "2016" = "black", "2017" = "black", "2018" = "black", "2019" = "black"))+
-  ggtitle("Annual daily rainfall average from 2014 to 2019 at Sabana Field Research Station")+
+  ggtitle("Annual daily rainfall average from 2014 to 2017 at Sabana Field Research Station")+
   ylab("Precipitation in mm")+
   xlab("Year")+
   theme_cowplot()
- 
-# weatherTRACE %>% filter(year != 2013) %>%  ggplot(aes(x = factor(year), y = total_Precip_year)) + 
-#   geom_bar(stat = "identity") + 
-#   ggtitle("Total Precipitation Yearly from 2014 to 2019 at Sabana")+
-#   ylab("Total Precipitation in mm")+
-#   xlab("Year")
 ```
 
-```{r Time series point graph about temperature change through out the year}
+#### Discussion
+
+This bar graph highlights the severe impact of droughts on daily average amount of precipitation in Sabana Field Research Station in 2015. It's necessary to note that we chose to plot out the daily rainfall average due to the inconsistent of our meterological data (missing data for days, shortage of electricity)
+
+```{r Time series point graph about temperature change through out the year, echo=FALSE, message=FALSE, warning=FALSE}
 weatherTRACE %>% filter(year == 2015) %>% ggplot(aes(x = Timestamp, y = AirTC_Avg)) + geom_point()+
   labs(title = "2015 Daily Average Temperature at Sabana Field Research Station", x = "Time", y = "Temperature in \u00B0C")+
   theme_cowplot()
-
-weatherTRACE %>% filter(year == 2015) %>% ggplot(aes(x = `Relative Humidity`, y = AirTC_Avg)) + geom_point()
-
-weatherTRACE %>% filter(AirTC_Avg != 0) %>% ggplot(aes(x = Timestamp, y = AirTC_Avg)) +geom_point()
 ```
 
-```{r Plotting temperature, relative humidity, and time}
-tempHumidDaily <- weatherTRACE %>%  select(Timestamp, AirTC_Avg, `Relative Humidity`) %>% filter(year!= 2013 & AirTC_Avg != 0)
+#### Discussion
 
-max_first  <- max(tempHumidDaily$AirTC_Avg)   # Specify max of first y axis
-max_second <- max(tempHumidDaily$`Relative Humidity`) # Specify max of second y axis
-min_first  <- min(tempHumidDaily$AirTC_Avg)   # Specify min of first y axis
-min_second <- min(tempHumidDaily$`Relative Humidity`) # Specify min of second y axis
+Delving into the trend of daily temperature in Sabana Field Research Station in 2015, we notice a temperature spike from May to early November. This immense changes clearly demonstrate the impact of the major drought on Luquillo Mountains' daily temperature.
 
-# scale and shift variables calculated based on desired mins and maxes
-scale = (max_second - min_second)/(max_first - min_first)
-shift = min_first - min_second
-
-# Function to scale secondary axis
-scale_function <- function(x, scale, shift){
-  return ((x)*scale - shift)
-}
-
-# Function to scale secondary variable values
-inv_scale_function <- function(x, scale, shift){
-  return ((x + shift)/scale)
-}
-
-ggplot(tempHumidDaily, aes(x = Timestamp, y = AirTC_Avg)) +
-  geom_line(aes(color = "Daily Air Temperature in C")) +
-  geom_line(aes(y = inv_scale_function(tempHumidDaily$`Relative Humidity`, scale, shift), color = "Relative Humidity in %")) +
-  # scale_x_continuous(breaks = seq(2014, 2019, 1)) +
-  scale_y_continuous(limits = c(min_first, max_first), sec.axis = sec_axis(~scale_function(., scale, shift), name="Relative Humidity in %")) +
-  labs(x = "Year", y = "Temperature (Celsius)", color = "") +
-  scale_color_manual(values = c("orange2", "gray30"))+
-  theme(
-    axis.title.y = element_text(color = "gray30"),
-    axis.title.y.right = element_text(color = "orange3")
-  ) + 
-  theme_cowplot()
-
-```
-
-```{r Plotting temperature, total precipitation, and time - Version 1}
-
+```{r Plotting temperature, total precipitation, and time - Version 2, echo=FALSE, message=FALSE, warning=FALSE}
 tempPrecipDaily <- weatherTRACE %>%  select(Timestamp, AirTC_Avg, `TOT_PREP(mm)`) %>% filter(!year%in% c(2013,2019)  & AirTC_Avg != 0 & `TOT_PREP(mm)` > 0 & `TOT_PREP(mm)` < 1000)
-
-max_first  <- max(tempPrecipDaily$AirTC_Avg)   # Specify max of first y axis
-max_second <- max(tempPrecipDaily$`TOT_PREP(mm)`) # Specify max of second y axis
-min_first  <- min(tempPrecipDaily$AirTC_Avg)   # Specify min of first y axis
-min_second <- min(tempPrecipDaily$`TOT_PREP(mm)`) # Specify min of second y axis
-
-# scale and shift variables calculated based on desired mins and maxes
-scale = (max_second - min_second)/(max_first - min_first)
-shift = min_first - min_second
-
-# Function to scale secondary axis
-scale_function <- function(x, scale, shift){
-  return ((x)*scale - shift)
-}
-
-# Function to scale secondary variable values
-inv_scale_function <- function(x, scale, shift){
-  return ((x + shift)/scale)
-}
-
-ggplot(tempPrecipDaily, aes(x = Timestamp, y = AirTC_Avg)) +
-  geom_line(aes(color = "Daily Air Temperature in C")) +
-  geom_line(aes(y = inv_scale_function(tempPrecipDaily$`TOT_PREP(mm)`, scale, shift), color = "Total Precipitation in mm")) +
-  scale_y_continuous(limits = c(min_first, max_first), sec.axis = sec_axis(~scale_function(., scale, shift), name="Total Precipitation in mm")) +
-  labs(x = "Year", y = "Temperature (Celsius)", color = "") +
-  scale_color_manual(values = c("orange2", "gray30"))+
-  theme(
-    axis.title.y = element_text(color = "gray30"),
-    axis.title.y.right = element_text(color = "orange3")
-  ) + 
-  theme_cowplot()
-
-
-```
-```{r Plotting temperature, total precipitation, and time - Version 2}
-summary(tempPrecipDaily)
 
 tempPrecipDaily %>% ggplot() + 
   geom_bar(mapping = aes(x = Timestamp, y = `TOT_PREP(mm)` * 100 / 900), stat = "identity", colour = gray(0.5), fill = gray(0.5)) + 
@@ -337,10 +198,13 @@ tempPrecipDaily %>% ggplot() +
   ) +
   labs(title = "Daily average Temperature and Precipitation at Sabana Field Research Station 2014-2017")
 ```
-```{r}
-summary(weatherTRACE)
-```
-```{r Calculating heat index & categorizing hot temp}
+
+#### Discussion
+
+This graph portrays the interconnection of temperature and precipitation in Sabana Field Research Station from 2014 to 2015. Indeed, daily temperature visualizes a sine cycle, showing the temperature trend in dry seasons and rainy seasons in the Luquillo Mountains. Consequently, the peak of rainfall usually happens from April to November except for during the major drought 2015. 
+
+
+```{r Calculating heat index & categorizing hot temp, echo=FALSE, message=FALSE, warning=FALSE}
 weatherTRACE <- weatherTRACE %>% 
   mutate(heatIndex = heat.index(t= AirTC_Max, rh = `Relative Humidity`, temperature.metric = "celsius", output.metric = "fahrenheit", round = 0)) %>% 
   mutate(heatStatus = case_when(heatIndex <= 90 ~ "Hot",
@@ -361,25 +225,21 @@ rainfallRollingData <- weatherTRACE %>% mutate(rolling_avg = rollmean(`TOT_PREP(
 
 ```
 
-```{r Plotting the running average graph for rainfall}
-ggplot(rainfallRollingData, aes(x = Timestamp, y = rolling_avg)) + geom_line() +
-  geom_smooth() 
-  # geom_line(aes(x=Timestamp,y = rainfallRollingData$`TOT_PREP(mm)`),color="red")
-```
-```{r Plotting the temperature and rainfall}
+```{r Plotting the temperature and rainfall Sabana, echo=FALSE, message=FALSE, warning=FALSE}
 weatherTRACE$heatStatus <- factor(weatherTRACE$heatStatus, levels = c("Extreme Danger Hot", "Danger Hot", "Extreme Hot", "Hot"))
 weatherTRACE %>%  filter(`TOT_PREP(mm)` < 150) %>% ggplot(aes(y= AirTC_Avg, x = `TOT_PREP(mm)`, color = heatStatus ))+
   geom_point()+
   geom_smooth() +
   labs(title = "Correlation of heat intensity and daily precipitation at Sabana Field Research Station", y= "Temperature in \u00B0C", x = "Precipitation in mm", color = "Heat Intensity")+
   theme_cowplot()
+```
 
-#Playing around version (Not a great one!)
-weatherTRACE %>%  filter(`TOT_PREP(mm)` < 150) %>% ggplot(aes(y= AirTC_Avg, x = `TOT_PREP(mm)`, color = rainfallStatus ))+
-  geom_point()+
-  geom_smooth()+
-  facet_wrap(~ heatStatus)
+#### Discussion
 
+According to CDC heat index chart, there is a total of five stages of heat intensity in descending order: Extreme Danger Hot, Danger Hot, Extreme Hot, Hot, and Normal. Even though the data points are quite variable for Danger Hot and Extreme Hot days, there is an association between temperature and precipitation in the most heat intense days. This observation supports our hypothesis of the positive correlation between low rainfall and high heat shock. Yet, we need to further test the statistical significance of this relationship.
+
+
+```{r Plotting the temperature and rainfall Sabana 2, echo=FALSE, message=FALSE, warning=FALSE}
 # Version 2
 weatherTRACE %>% mutate(comboStressors = ifelse(heatStatus == "Extreme Danger Hot" & rainfallStatus == "Low rainfall", "YES", "NO"))%>% 
   ggplot(aes(y= AirTC_Avg, x = `TOT_PREP(mm)`, color = comboStressors ))+
@@ -389,22 +249,13 @@ weatherTRACE %>% mutate(comboStressors = ifelse(heatStatus == "Extreme Danger Ho
   labs(title = "Correlation of Climate Stressors Occurences and Heat Intensity at Sabana Field Research Station", x = "Precipitation in mm", y = "Temperature in \u00B0C", color = "Climate Stressors")+
   theme_cowplot()
 ```
-```{r Plotting temperature overtime}
-weatherTRACE %>% ggplot(aes(x = Timestamp, y = AirTC_Avg, color = heatStatus)) +
-  geom_point()
 
-```
+#### Discussion
 
-```{r New data frame with drought index}
-droughtIndex <- unique(weatherTRACE %>% mutate(monthNum = match(month, month.name)) %>% select(year, monthNum,total_Precip_month)) 
-# droughtIndex %>% mutate(index = spi(weatherTRACE$total_Precip_month,3))
-spi3 <- spi(droughtIndex$total_Precip_month,3)
+"Climate Stressors" variable (days with low rainfall and intense heat shock) is introduced to further investigate the relationship between daily temperature and rainfall in Sabana Field Research Station. Zooming in the subset of Extreme Danger Hot days, we notice all "Climate Stressors" days appear here, associating with 0 mm of daily precipitation.
 
-plot(spi3)
-
-```
-### Examine the difference of low rainfall and high heat shock across topography
-```{r Load Bisley data in}
+### Bisley Experimental Watersheds
+```{r Load Bisley data in,  echo=FALSE, message=FALSE, warning=FALSE}
 Bisley2015 <- read.csv("Bisley2015.csv")
 Bisley2016 <- read.csv("Bisley2016.csv")
 Bisley2017 <- read.csv("Bisley2017.csv")
@@ -431,37 +282,26 @@ Bisley2017$month <- month.name[month(Bisley2017$Timestamp)]
 
 Bisley2017 <- Bisley2017 %>% select(Timestamp, AirTC_Max, AirTC_Min, `TOT_PREP(mm)`, RH_Max, RH_Min, month, year) %>% filter(!is.na(Timestamp))
 
-#Bisley 2018 cleaning (supper ugly since low battery)
-# colnames(Bisley2018)[3] <- "TOT_PREP(mm)"
-# Bisley2018$Timestamp <- mdy(Bisley2018$Timestamp)
-# Bisley2018$month <- month.name[month(Bisley2018$Timestamp)]
-# 
-# Bisley2018 <- Bisley2018 %>% select(Timestamp, AirTC_Max, AirTC_Min, `TOT_PREP(mm)`, RH_Max, RH_Min, month, year) %>% filter(!is.na(Timestamp) & RH_Max > 10)
-
 weatherBisley <- bind_rows(Bisley2015, Bisley2016, Bisley2017) 
 weatherBisley <- weatherBisley %>% filter(AirTC_Max > 0 & AirTC_Min > 0 )
 ```
 
-### Exploratory Analysis for Bisley Research Site
-```{r}
-# weatherBisley %>% ggplot(aes(x = month, y = `TOT_PREP(mm)`, color = year))+
-#   geom_line()
-
-weatherBisley %>% ggplot(aes(x = Timestamp, y = AirTC_Max)) + geom_line() +
-  geom_line(aes(x = Timestamp, y = weatherBisley$AirTC_Min), color = "blue") +
-  labs(title = "Temperature in Bisley Research Station from 2015 to 2017", x = "Year", y = "Temperature in ("~degree~"C)") +
-  scale_color_manual(name = "Temperature",
-values = c( "Max Air Temperature" = "red", "Min Air Temperature" = "blue"))
-
-weatherBisley %>% ggplot(aes(x = Timestamp, y = `TOT_PREP(mm)`)) + geom_line() +
-  labs(title = "Rainfall in Bisley Research Station from 2015 to 2017", x = "Year", y = "Rainfall in mm")
-
-unique(weatherBisley %>% group_by(year) %>% mutate(total_precip_year = sum(`TOT_PREP(mm)`)) %>% select(year, total_precip_year)) %>% 
-  ggplot(aes(x=year, y = total_precip_year)) +
-  geom_bar(stat = "identity")
+```{r,  echo=FALSE, message=FALSE, warning=FALSE}
+# weatherBisley %>% ggplot(aes(x = Timestamp, y = AirTC_Max)) + geom_line() +
+#   geom_line(aes(x = Timestamp, y = weatherBisley$AirTC_Min), color = "blue") +
+#   labs(title = "Temperature in Bisley Research Station from 2015 to 2017", x = "Year", y = "Temperature in ("~degree~"C)") +
+#   scale_color_manual(name = "Temperature",
+# values = c( "Max Air Temperature" = "red", "Min Air Temperature" = "blue"))
+# 
+# weatherBisley %>% ggplot(aes(x = Timestamp, y = `TOT_PREP(mm)`)) + geom_line() +
+#   labs(title = "Rainfall in Bisley Research Station from 2015 to 2017", x = "Year", y = "Rainfall in mm")
+# 
+# unique(weatherBisley %>% group_by(year) %>% mutate(total_precip_year = sum(`TOT_PREP(mm)`)) %>% select(year, total_precip_year)) %>% 
+#   ggplot(aes(x=year, y = total_precip_year)) +
+#   geom_bar(stat = "identity")
 ```
-## Integrating heat index and rainfall classification into Bisley
-```{r}
+
+```{r Integrating heat index and rainfall classification into Bisley,  echo=FALSE, message=FALSE, warning=FALSE, results='hide'}
 weatherBisley <- weatherBisley %>% 
   mutate(heatIndex = heat.index(t= AirTC_Max, rh = RH_Max, temperature.metric = "celsius", output.metric = "fahrenheit", round = 0)) %>% 
   mutate(heatStatus = case_when(heatIndex < 80 ~ "Normal",
@@ -478,14 +318,23 @@ weatherBisley <- weatherBisley %>% mutate(rainfallStatus = case_when(`TOT_PREP(m
 
 # Relationship between temp and precip 
 weatherBisley$heatStatus <- factor(weatherBisley$heatStatus, levels = c("Extreme Danger Hot", "Danger Hot", "Extreme Hot", "Hot", "Normal"))
-weatherBisley %>% ggplot(aes(y = AirTC_Max, x = `TOT_PREP(mm)`, color = heatStatus))+
+```
+
+```{r Relationship between temp and precip Bisley,  echo=FALSE, message=FALSE, warning=FALSE}
+weatherBisley %>% filter(heatStatus != "Extreme Danger Hot") %>% ggplot(aes(y = AirTC_Max, x = `TOT_PREP(mm)`, color = heatStatus))+
   geom_point()+
   geom_smooth()+
   labs(title = "Correlation of heat intensity and daily precipitation at Bisley Experimental Watershed", y= "Temperature in \u00B0C", x = "Precipitation in mm", color = "Heat Intensity")+
   theme_cowplot()
-  
+```
 
-weatherBisley %>% mutate(comboStressors = ifelse(heatStatus == "Extreme Danger Hot" | heatStatus == "Danger Hot" & rainfallStatus == "Low rainfall", "YES", "NO")) %>% 
+#### Discussion
+
+This graph captures the correlation of heat intensity (from daily maximum temperature) and daily precipitation at Bisley Experimental Watersheds. With the higher elevation above the sea level, the daily heat of Bisley tends to be more mild compared to Sabana's. However, similar to Sabana Field Research Station, despite the variability of data points for Extreme Hot and Hot days in Bisley, there is an association between temperature and precipitation in the most heat intense day, supporting our first hypothesis. 
+
+```{r Plotting the temperature and rainfall Bisley 2, echo=FALSE, message=FALSE, warning=FALSE }
+# Version 2
+weatherBisley %>% mutate(comboStressors = ifelse(heatStatus == "Extreme Danger Hot" | heatStatus == "Danger Hot" & rainfallStatus == "Low rainfall", "YES", "NO")) %>% filter(heatStatus!= "Extreme Danger Hot") %>% 
   ggplot(aes(y= AirTC_Max, x = `TOT_PREP(mm)`, color = comboStressors ))+
   geom_point()+
   geom_smooth()+
@@ -494,14 +343,16 @@ weatherBisley %>% mutate(comboStressors = ifelse(heatStatus == "Extreme Danger H
   theme_cowplot()
 ```
 
-```{r Comparison between TRACE and Bisley}
-# weatherTRACE %>% filter(year == c(2015,2016,2017)) %>% 
-#   ggplot(aes(x = Timestamp, y = AirTC_Max))+ geom_line()+
-#   geom_line(weatherBisley, aes(x=Timestamp, y = weatherBisley$AirTC_Max))
+#### Discussion
 
+"Climate Stressors" variable (days with low rainfall and intense heat shock) is introduced to further investigate the relationship between daily temperature and rainfall in Bisley Experimental Watersheds. Looking at the subset of Extreme Danger Hot days, we notice all "Climate Stressors" days appear here, receiving 0 mm of daily precipitation. This further supports our hypothesis of relationship between low rainfall and heat shock.
+
+### Sabana Field Research Station vs. Bisley Experimental Watersheds
+
+```{r Comparison between TRACE and Bisley, echo=FALSE, message=FALSE, warning=FALSE }
 # Compare rainfall from two sites
 
-rainfall2sites <- rbind(weatherTRACE %>% group_by(year) %>% summarize(avgPrecip_Yearly = mean(`TOT_PREP(mm)`), Station = "Sabana"), weatherBisley %>% group_by(year) %>% summarize(avgPrecip_Yearly = mean(`TOT_PREP(mm)`), Station = "Bisley")) %>% filter(year != 2014 & year != 2019)
+rainfall2sites <- rbind(weatherTRACE %>% group_by(year) %>% summarize(avgPrecip_Yearly = mean(`TOT_PREP(mm)`), Station = "Sabana"), weatherBisley %>% group_by(year) %>% summarize(avgPrecip_Yearly = mean(`TOT_PREP(mm)`), Station = "Bisley")) %>% filter(year != 2019)
 
 rainfall2sites %>% ggplot(aes(x=year, y = avgPrecip_Yearly, fill = Station))+
   geom_bar(stat = "identity", position = "dodge")+
@@ -513,12 +364,14 @@ rainfall2sites %>% ggplot(aes(x=year, y = avgPrecip_Yearly, fill = Station))+
       y = "Daily Average of Precipitation in mm")+
   theme_cowplot()
 ```
-# Graph interpretation
-From 2014 to 2017, there is a decrease in total precipitation yearly in both Bisley and TRACE Research Stations. In these four years, Bisley had more rainfall amount compared to TRACE, suggesting a difference stem from their ecological attributes.
 
-```{r Compare two sites temperature}
-hist(weatherTRACE$AirTC_Max)
-hist(weatherBisley$AirTC_Max) 
+#### Discussion
+
+From 2014 to 2017, there is a decrease in total precipitation yearly in both Bisley and TRACE Research Stations. In these four years, Bisley had more rainfall amount compared to TRACE, suggesting a difference stem from their ecological attributes. Indeed, higher elevation areas are more likely to receive more direct rain because of less amount of canopy area. It is worth noting that we do not have rainfall data of Bisley in hand, which answers to the lack of a column in 2014 from Bisley.
+
+```{r Compare two sites temperature, echo=FALSE, message=FALSE, warning=FALSE }
+# hist(weatherTRACE$AirTC_Max)
+# hist(weatherBisley$AirTC_Max) 
 
 inner_join(weatherTRACE %>% select(Timestamp, AirTC_Max), weatherBisley %>% select(Timestamp, AirTC_Max), by = "Timestamp") %>% 
   ggplot(aes(x=Timestamp))+
@@ -530,8 +383,10 @@ inner_join(weatherTRACE %>% select(Timestamp, AirTC_Max), weatherBisley %>% sele
        color = "Station")+
   theme_cowplot()
 ```
-# Graph intepretation
-Through out 2015 to 2017, Bisley and TRACE had the similar pattern of changes in maximum temperature. However, TRACE had a higher temperature range through out these 3 years, ranging from 22.41 to 34.56 \u00B0C compared to Bisley's temperature, which ranges from 20 to 32.28 \u00B0C. Again, this suggest the difference in topography contributes to different climatic attributes.
+
+#### Discussion
+
+Through out 2015 to 2017, Bisley and TRACE had the similar pattern of changes in maximum temperature. However, TRACE had a higher temperature range through out these 3 years, ranging from 22.41 to 34.56 \u00B0C compared to Bisley's temperature, which ranges from 20 to 32.28 \u00B0C. Again, this suggest the difference in topography contributes to different climatic attributes especially hotter weather in lower elevation in this case.
 
 ```{r Linear regression model for temperature and rainfall in two sites}
 model <- lm(weatherTRACE$`TOT_PREP(mm)`~ AirTC_Max + weatherTRACE$heatStatus + weatherTRACE$rainfallStatus, data = weatherTRACE)
@@ -540,19 +395,29 @@ summary(model)
 model1 <- lm(weatherBisley$`TOT_PREP(mm)`~ AirTC_Max + weatherBisley$heatStatus + weatherBisley$rainfallStatus , data = weatherBisley)
 summary(model1)
 
+```
+
+#### Models Interpretation
+
+These two are two linear regression models between the daily precipitation and daily maximum temperature in two study sites, Bisley and TRACE. For the model in TRACE, with an increase in one Celsius degree, there would be a decrease of 2.3mm in precipitation that day. Similarly for Bisley, with an increase in temperature, there would be a decrease of 0.8mm in precipitation that day. Statistically, two models have low p-values (respectively < 2.2e-16 and 6.059e-12) though insignificant R-squared (respectively 0.145 and 0.15).
+
+```{r Logistic regression models for climate stressors and temp & rainfall in two sites,  echo=FALSE, message=FALSE, warning=FALSE }
+# 
+# 
+# model2 <- glm(weatherTRACE$`Climate Stressors` ~ weatherTRACE$`TOT_PREP(mm)` + AirTC_Max + weatherTRACE$`TOT_PREP(mm)`*AirTC_Max, data = weatherTRACE, family = "binomial")
+# summary(model2)
+# exp(coef(model2))
+# 
+# model3 <- glm(weatherBisley$`Climate Stressors` ~ weatherBisley$`TOT_PREP(mm)` + AirTC_Max + weatherBisley$`TOT_PREP(mm)`*AirTC_Max, data = weatherBisley, family = "binomial")
+# summary(model3)
+# exp(coef(model3))
+```
+
+```{r Linear regression models for temperature and rainfall in both sites}
 weatherTRACE <- weatherTRACE %>% mutate("Climate Stressors" = ifelse(heatStatus == "Extreme Danger Hot"  & rainfallStatus == "Low rainfall", 1, 0), Station = "TRACE")
 
 weatherBisley <- weatherBisley %>% mutate("Climate Stressors" = ifelse(heatStatus == "Extreme Danger Hot" | heatStatus == "Danger Hot" & rainfallStatus == "Low rainfall", 1, 0), Station = "Bisley")
 colnames(weatherBisley)[5] <- "Relative Humidity"
-
-
-model2 <- glm(weatherTRACE$`Climate Stressors` ~ weatherTRACE$`TOT_PREP(mm)` + AirTC_Max + weatherTRACE$`TOT_PREP(mm)`*AirTC_Max, data = weatherTRACE, family = "binomial")
-summary(model2)
-exp(coef(model2))
-
-model3 <- glm(weatherBisley$`Climate Stressors` ~ weatherBisley$`TOT_PREP(mm)` + AirTC_Max + weatherBisley$`TOT_PREP(mm)`*AirTC_Max, data = weatherBisley, family = "binomial")
-summary(model3)
-exp(coef(model3))
 
 weatherAll <- rbind(weatherTRACE %>% select(- c(AirTC_Avg, total_Precip_month, total_Precip_year)), weatherBisley %>% select(-c(AirTC_Min, RH_Min)))
 
@@ -560,10 +425,12 @@ model4 <- lm(weatherAll$`TOT_PREP(mm)` ~ AirTC_Max + weatherAll$heatIndex + weat
 summary(model4)
 
 ```
-# Models Intepretation
-These two are two simple linear regression models between the daily precipitation and daily maximum temperature in two study sites, Bisley and TRACE. For the model in TRACE, with an increase in one Celsius degree, there would be a decrease of 2.3mm in precipitation that day. Similarly for Bisley, with an increase in temperature, there would be a decrease of 0.8mm in precipitation that day. Statistically, two models have low p-values (respectively < 2.2e-16 and 6.059e-12) though insignificant R-squared. (Rewrite!!!!!!!!!!) 
 
-```{r Comparing frequency of climate stressors in two sites}
+#### Model Intepretation
+
+Meteorological data from two sites are merged together. We then fit the data into a linear regression model. With an increase in one Celsius degree, there would be a decrease of 2.1mm in precipitation that day. Statistically, this model has statistical significant p-values (< 2.2e-16) though insignificant R-squared (~0.12)
+
+```{r Comparing frequency of climate stressors in two sites , echo=FALSE, message=FALSE, warning=FALSE}
 stressorFreq <- rbind(weatherTRACE %>% group_by(year) %>% count(`Climate Stressors`) %>% mutate(Station = "Sabana"),weatherBisley %>% group_by(year) %>% count(`Climate Stressors`) %>% mutate(Station = "Bisley")) %>% 
   filter(year != 2014 & year != 2019 ) %>% 
   pivot_wider(names_from = `Climate Stressors`, values_from = n)
@@ -584,11 +451,13 @@ stressorFreq %>% group_by(year, Station) %>%
   theme_cowplot()
 
 ```
-# Graph Interpretation
+
+#### Discussion
+
 From 2015 to 2017, the percentage of having a climate-stressors day of TRACE is always higher than Bisley's, suggesting that TRACE will be likely to experience low rainfall and high heat shock compared to Bisley.
 
 ### Seedling and Sapling Census
-```{r}
+```{r Data processing and cleaning, echo=FALSE, message=FALSE, warning=FALSE}
 seedlingSapling2015 <- read.csv("SeedlingSapling2015.csv")
 seedlingSapling2016 <- read.csv("SeedlingSapling2016.csv")
 seedlingSapling2017 <- read.csv("SeedlingSapling2017.csv")
@@ -610,7 +479,9 @@ data1 <- unique(seedlingSapling2015 %>% filter(MONTH == "NOVEMBER") %>%  filter(
 data2 <- unique(seedlingSapling2016 %>% filter(!grepl("sp|UN|Un", SPECIES)) %>% count(SPECIES) %>% mutate(ShannonIndex = diversity(n, "shannon"), year = "2016") %>% select(year, ShannonIndex))
 
 data3 <- unique(seedlingSapling2017 %>%  filter(!grepl("sp|UN|Un", SPECIES)) %>% count(SPECIES) %>% mutate(ShannonIndex = diversity(n, "shannon"), year = "2017" ) %>% select(year, ShannonIndex))
+```
 
+```{r Shannon Comparison after drought, echo=FALSE, message=FALSE, warning=FALSE }
 ShannonComparison <- rbind(data, data1, data2, data3)
 drought2015 = 2.509188
 level_order_Shannon <- c("Drought 2015", "Post-drought 2015", "2016", "2017")
@@ -619,11 +490,15 @@ ShannonComparison$year <- factor(ShannonComparison$year, levels = c('Drought 201
   ggplot(aes(x= factor(year, level= level_order_Shannon), y = index_dif, fill = year)) +
   geom_bar(stat = "identity")+
     labs(title = "Biodiversity Index Difference after major drought 2015 in Sabana Field Research Station", x= "Timeline", y = "Index difference", fill = "Year")+
-    theme_cowplot()
+    theme_cowplot()+
+   theme(axis.text.x = element_text(angle = 10, vjust = 0.5, hjust=1))
 ```
-# Graph Interpretation
 
-```{r Testing relationship of climate stressors and TRACE biodiversity}
+#### Discussion
+
+This graph captures the changes in Shannon biodiversity index of Sabana Field Research Station after the major drought 2015. The result was surprising as our initial hypothesis was after drought 2015, the plant population in Saban would decrease immensely, before bouncing back in 2016 and 2017. However, from Sabana's plant census, the biodiversity of the forest gradually decreases after the major drought 2015. This could be explained by the massive increase of drought-resistance plants in 2015. In 2016 and 2017, when the physiology of the forest stabilized, those plants couldn't compete/ adapt to the restored forest's conditions. That might lead to the extinct of species in Sabana, resulting in lower biodiversity index.
+
+```{r Testing relationship of climate stressors and TRACE biodiversity, echo=FALSE, message=FALSE, warning=FALSE}
 climateStressorsvShannon <- weatherTRACE %>% mutate(yearR = case_when(year != 2015 ~ as.character(year),
                                           year == 2015 & month %in% c("January", "February", "March", "April") ~ "Pre-drought 2015",
                                           year == 2015 & month %in% c("May", "June", "July", "August", "September", "October") ~ "Drought 2015",
@@ -636,18 +511,14 @@ climateStressorsvShannon$yearR <- factor(climateStressorsvShannon$yearR, levels 
 climateStressorsvShannon %>% ggplot(aes(x = factor(yearR, levels = level_order_Shannon), y = n, fill = yearR)) +
   geom_bar(stat = "identity")+
     labs(title = "Climate Stressors Occurences overtime at Sabana Reasearch Station", x= "Timeline", y = "Number of days", fill = "Year")+
-  theme_cowplot()
+  theme_cowplot()+
+   theme(axis.text.x = element_text(angle = 10, vjust = 0.5, hjust=1))
 
-climateStressorsvShannon %>% ggplot(aes(y= n, x = ShannonIndex, label = yearR, color = yearR))+
-  geom_text(hjust = 0.7)+
-  labs(title = "Climate Stressors vs. Shannon Index from 2015 to 2017 at Sabana Research Station", x = "Shannon Biodiversity Index", y = "Number of days")
-
-climateStressorsvShannon %>% ggplot(aes(x = ShannonIndex, y = n, fill = yearR))+
-  geom_bar(stat = "identity", width = 0.009)
-
-model5 <- lm(ShannonIndex ~ n + yearR, data = climateStressorsvShannon)
-summary(model5)
 ```
+
+#### Discussion
+
+We looked further into the occurrences of "Climate Stressors" days in Sabana Field Research Station from 2015 to 2017. Obviously, during drought(May-November 2015), there were more "Climate Stessors" day. We then questioned whether if there is a relationship between the number of "Climate Stressors" days and the change of biodiversity index. There were no statistical significance supports the correlation.
 
 ```{r ANOVA test}
 climatestressorsbyStation <- weatherAll %>% mutate(yearR = case_when(year != 2015 ~ as.character(year),
@@ -660,32 +531,43 @@ res.aov <- aov(n ~ Station, data = climatestressorsbyStation)
 summary(res.aov)
 ```
 
-```{r Looking into 2015 - year of drought seedling census}
+```{r Looking into 2015 - year of drought seedling census, echo=FALSE, message=FALSE, warning=FALSE}
 seedlingJune <- seedlingSapling2015 %>% filter(MONTH == "JUNE" & TYPE == "Seedling" & STATUS == "A") %>% select(QUAD, PLOT, TAG, SPECIES, HEIGHT) %>% mutate(Time = "Drought 2015")
 seedlingNov <- seedlingSapling2015 %>% filter(MONTH == "NOVEMBER" & TYPE == "Seedling"& STATUS == "A") %>% select(QUAD, PLOT, TAG, SPECIES, HEIGHT) %>% mutate(Time = "Post-drought 2015")
 
 seedlingJune %>% rbind(seedlingNov) %>% ggplot()+
     geom_boxplot(aes(x = SPECIES, y = HEIGHT, fill = Time))+
-  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+    labs(title = "Species growth during and after the major drought 2015 in Sabana Field Research Station", x= "Species", y = "Height in cm")+
+  theme_cowplot()+
+   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+```
 
+#### Discussion
+
+This visualize investigate the changes in heights of all species that got recorded in Sabana Field Research Station during and after drought. We can notice some of the good drought-resistance species in this forest, including PREMON, PIPHIS, or ROYBOR. We were then eager to capture the species' percent of growth after the major drought.
+
+```{r Percent change of species , echo=FALSE, message=FALSE, warning=FALSE}
 seedlingJune %>% left_join(seedlingNov, by = c('QUAD', "PLOT", "TAG", "SPECIES")) %>% mutate(percentChange = (HEIGHT.y*100/HEIGHT.x)-100) %>% 
   ggplot(aes(x = SPECIES, y = percentChange)) +
   geom_boxplot()+
+  labs(title = "Species' percentage of growth after the major drought 2015 in Sabana Field Research Station", x= "Species", y = "Height in cm")+
+  theme_cowplot()+
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
 
 seedlingStatTest <- seedlingJune %>% left_join(seedlingNov, by = c('QUAD', "PLOT", "TAG", "SPECIES")) %>% mutate(percentChange = (HEIGHT.y*100/HEIGHT.x)-100) %>% select(TAG, SPECIES, percentChange)
-
-# t.test(percentChange ~ SPECIES, data = seedlingStatTest)
 ```
 
+#### Discussion
 
-```{r Gibberish}
+Similar to previous visualization, PREMON, PIPHIS, and ROYBOR are standing out to be one of the best drought-resistance species in this forest. This might suggest residents near Luquillo Mountains to grow them to avoid land fragment during severe drought in the future.
+
+```{r Gibberish, echo=FALSE, message=FALSE, warning=FALSE }
 unique( weatherBisley %>% group_by(year) %>% summarize(x = sum(`TOT_PREP(mm)`)))
 sum(Bisley2017$`TOT_PREP(mm)`)
 unique(weatherTRACE %>% select(year, total_Precip_year))
 ```
 
-```{r Export data for Nibia}
+```{r Export data for Nibia, , echo=FALSE, message=FALSE, warning=FALSE}
 save(weatherTRACE, file = "weatherTRACE.RData")
 # load("NY_all.RData")
 ```
