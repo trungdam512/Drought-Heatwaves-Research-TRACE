@@ -37,6 +37,5 @@ I appreciate the time and effort these individuals have dedicated to making this
 ## Contact
 
 If there are any questions about my summer project, please contact me at:
-  - LinkedIn: https://www.linkedin.com/in/trung-dam-86962a235/
-  - Email: tdam@macalester.edu
+[LinkedIn](https://www.linkedin.com/in/trung-dam-86962a235/) or tdam@macalester.edu
 
