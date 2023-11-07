@@ -1,45 +1,42 @@
 # Drought-Heatwaves-Research-TRACE
-Summer 2023 research on climate stressors, including heatwaves, low rainfall patterns, and their effects on plant biodiversity in El Yunque, Luquillo, Puerto Rico in with Dr. Christine Sierra O'Connell
 
-# Investigating Drought Climatic Aspects in Puerto Rican Tropical Rainforest 
-
-
-A brief introduction to your summer internship project.
+Summer 2023 research on climate stressors, including heatwaves, low rainfall patterns, and their effects on plant biodiversity in El Yunque, Luquillo, Puerto Rico with Dr. Christine Sierra O'Connell and Tropical Responses to Altered Climate Experiment (TRACE).
 
 ## Description
 
-Provide a detailed description of the project, including its objectives and goals. Describe the problem you are trying to solve or the purpose of the project.
+The dynamic of precipitation and temperature in tropical rainforests has always been an ongoing research topic. This research aims to delve into the interconnection of daily rainfall and occasionally heat shock in two study sites in Puerto Rico: Sabana Field Research Station and Bisley Experimental Watersheds. Sabana Field Research Station is at the elevation of 100 meters above sea level, whereas Bisley is located 265-456 meters above sea level. These two sites are chosen to investigate the discrepancy of the relationship between rainfall and temperature across different topography. This research further explores the impact of low rainfall and heat shock periods on Sabana Field Research Station’s biodiversity. Meteorological and ecological censuses data was analyzed and fit into linear/logistic models to provide insights for this research. 
 
 ## Table of Contents
 
-Provide a table of contents for easy navigation of your ReadMe file.
+- [Results](#results)
+- [Discussion](#discussion)
+- [Acknowledgements](#acknowledgements)
+- [Contact](#contact)
 
-- [Installation](#installation)
-- [Usage](#usage)
-- [Contributing](#contributing)
-- [License](#license)
+## Results
 
-## Installation
+  - Different topography contributes to different climatic conditions: Bisley Watersheds had more amount of rainfall and lower range of daily average temperature over the course of 2014-2015
+  - There is an association between low rainfall events and high heat shock in both study sites: Sabana Field Research Station and Bisley Experimental Watersheds
+  - Sabana Field Research Station are suggested to experience lower precipitation and higher temperature than Bisley Watersheds
+  - After the major drought in 2015, as the occurences of climate stressors (low rainfall events and high heat shock), the Shannon's biodiversity of Sabana Research Center gradually decreased, implying the decline of several plant types
+  - PREMON, PIPHIS, and ROYBOR are found to have the most drought resilience and growth spurt after the major drought in 2015
 
-Provide step-by-step instructions on how to install, configure, and get the project running. Include any prerequisites or dependencies that need to be installed.
+## Discussion
 
-## Usage
-
-Provide examples and instructions for how to use the project. Include screenshots or code snippets if necessary to help users understand the project's functionality.
-
-## Contributing
-
-Explain how others can contribute to your project. Provide guidelines for contributing, such as coding standards, pull request processes, and how to report issues.
-
-## License
-
-Specify the license for your project. This is important to clarify how others can use, modify, and distribute your project.
-
-## Contact
-
-Provide your contact information (e.g., email, LinkedIn, or any other professional profiles) so that users can reach out to you with any questions, concerns, or feedback.
+These findings suggest more researches on the topic of climatic stressors (precipitation and temperature) in other rainforests around the world, further providing preventative care for the forest's ecosystem.
 
 ## Acknowledgements
 
-If there are any individuals, organizations, or resources that have helped you during the project, acknowledge them here.
+I would like to extend our heartfelt gratitude to the following individuals for their valuable contributions to this project:
+
+- [Dr. Christine O'Connell]: Collaboration on data processing, data visulization, model analysis.
+- [Tropical Responses to Altered Climate Experiment]: Sabana Field Research Station and Bisley Experimental Watersheds' database.
+
+I appreciate the time and effort these individuals have dedicated to making this project successful. Their support and insights have played a crucial role in shaping the project into what it is today.
+
+## Contact
+
+If there are any questions about my summer project, please contact me at:
+  - LinkedIn: https://www.linkedin.com/in/trung-dam-86962a235/
+  - Email: tdam@macalester.edu
 
