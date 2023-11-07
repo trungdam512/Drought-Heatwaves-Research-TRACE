@@ -1,5 +1,5 @@
 # Drought-Heatwaves-Research-TRACE
-Summer 2023 research on drought and heatwaves in El Yunque, Luquillo, Puerto Rico with Dr. Christine Sierra O'Connell
+Summer 2023 research on climate stressors, including heatwaves, low rainfall patterns, and their effects on plant biodiversity in El Yunque, Luquillo, Puerto Rico in with Dr. Christine Sierra O'Connell
 
 # Investigating Drought Climatic Aspects in Puerto Rican Tropical Rainforest 
 
