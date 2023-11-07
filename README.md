@@ -1,4 +1,4 @@
-# Drought-Heatwaves-Research-TRACE
+# Drought Heatwaves Research TRACE
 
 Summer 2023 research on climate stressors, including heatwaves, low rainfall patterns, and their effects on plant biodiversity in El Yunque, Luquillo, Puerto Rico with Dr. Christine Sierra O'Connell and Tropical Responses to Altered Climate Experiment (TRACE).
 
@@ -38,4 +38,8 @@ I appreciate the time and effort these individuals have dedicated to making this
 
 If there are any questions about my summer project, please contact me at:
 [LinkedIn](https://www.linkedin.com/in/trung-dam-86962a235/) or tdam@macalester.edu
+
+![image](https://github.com/trungdam512/Drought-Heatwaves-Research-TRACE/assets/102425284/e815ef69-2f2d-4894-9800-490f7e7e87db)
+
+
 
